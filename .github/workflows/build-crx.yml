@@ -41,6 +41,11 @@ jobs:
           name: orchid-downloader-zip
           path: orchid-downloader.zip
 
+      - name: Delete old release
+        run: gh release delete latest --cleanup-tag -y || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Release to GitHub
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
