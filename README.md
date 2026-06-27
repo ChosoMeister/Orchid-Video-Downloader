@@ -2,6 +2,14 @@
 
 Orchid Video Downloader is a clean-room, secure Chrome Manifest V3 extension designed to detect, parse, and download browser-played media streams directly to the local machine. It intercepts HLS (`.m3u8`), DASH (`.mpd`), and progressive formats (`.mp4`, `.webm`) securely, prioritizing user privacy and legal compliance.
 
+## Screenshots
+
+<div align="center">
+  <img src="docs/images/demo-popup.png" width="30%" alt="Popup Menu">
+  <img src="docs/images/demo-downloading.png" width="30%" alt="Downloading State">
+  <img src="docs/images/demo-finished.png" width="30%" alt="Download Complete">
+</div>
+
 ## Features
 
 - **Passive Stream Detection**: Intercepts request headers and response streams on allowed pages to detect media URLs without injecting code into pages.
