@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -47,3 +49,16 @@ jobs:
         with:
           name: orchid-downloader-crx
           path: orchid-downloader.crx
+
+      - name: Release to GitHub
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: latest
+          name: Latest Build
+          body: "Automated build of the latest changes on the main branch."
+          files: |
+            orchid-downloader.crx
+            orchid-downloader.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
