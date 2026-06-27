@@ -1,0 +1,53 @@
+name: Build and Release CRX
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Pack extension into ZIP
+        run: |
+          cd dist
+          zip -r ../orchid-downloader.zip .
+
+      - name: Upload ZIP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: orchid-downloader-zip
+          path: orchid-downloader.zip
+
+      - name: Pack extension into CRX
+        uses: cardinalby/webext-buildtools-pack-extension-dir-action@v1
+        with:
+          extensionDir: 'dist'
+          zipFilePath: 'orchid-downloader.zip'
+          crxFilePath: 'orchid-downloader.crx'
+
+      - name: Upload CRX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: orchid-downloader-crx
+          path: orchid-downloader.crx
