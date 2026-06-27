@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orchid Downloader</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-section">
+        <img class="brand-logo" src="/icons/orchid.png" alt="Orchid Logo">
+        <div class="brand-text">
+          <h1>Orchidpharmed</h1>
+          <span class="exclusive-badge">دانلودر اختصاصی</span>
+        </div>
+      </div>
+      <button id="clear-all-btn" class="btn-clear-all" aria-label="Clear all streams" title="Clear All">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+        <span>Clear</span>
+      </button>
+    </header>
+
+    <main>
+      <div id="no-streams-view" class="no-streams">
+        <div class="floating-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+        </div>
+        <div class="no-streams-text">
+          <span class="no-streams-title">No Media Found</span>
+          <span class="no-streams-subtitle">Play a video to trigger detection</span>
+        </div>
+      </div>
+
+      <div id="stream-list-container" class="stream-list" style="display: none;" aria-live="polite">
+        <!-- Stream cards will be injected dynamically -->
+      </div>
+    </main>
+  </div>
+  <script type="module" src="index.ts"></script>
+</body>
+</html>

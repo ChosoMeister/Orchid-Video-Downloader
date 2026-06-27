@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orchidpharmed - دانلودر اختصاصی</title>
+  <link rel="stylesheet" href="downloader.css">
+</head>
+<body>
+  <div class="downloader-container">
+    <div class="downloader-header">
+      <div class="branding-header">
+        <img class="brand-logo" src="/icons/orchid.png" alt="Orchid Logo">
+        <div class="brand-text">
+          <h1>Orchidpharmed</h1>
+          <span class="exclusive-badge">دانلودر اختصاصی</span>
+        </div>
+      </div>
+      <div class="file-info">
+        <div class="file-name-input-wrapper">
+          <input type="text" id="filename-input" class="file-name-input" value="downloading_media" aria-label="Output filename" title="Click to rename output file">
+        </div>
+        <div class="file-details">
+          <span id="format-badge" class="badge">format</span>
+          <span id="resolution-detail">Resolution: Unknown</span>
+          <span class="source-link-span">
+            <a id="source-url" href="#" target="_blank" aria-label="Original Source Link" class="source-link" rel="noopener noreferrer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              Original Source
+            </a>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Metrics -->
+    <div class="progress-section">
+      <div class="progress-metrics">
+        <div class="metric">
+          <div class="metric-label">Downloaded Chunks</div>
+          <div id="chunks-metric" class="metric-value">0 / 0</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Size</div>
+          <div id="size-metric" class="metric-value">0.00 MB</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Speed</div>
+          <div id="speed-metric" class="metric-value">0.0 KB/s</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Time Left</div>
+          <div id="time-metric" class="metric-value">--:--</div>
+        </div>
+      </div>
+
+      <div class="progress-bar-container" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <div id="progress-fill" class="progress-bar-fill"></div>
+      </div>
+      <div id="progress-percentage" class="progress-percentage" aria-live="polite">0%</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-section">
+      <div class="btn-group">
+        <button id="pause-resume-btn" class="btn btn-primary" aria-label="Pause or Resume download">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+          <span>Pause</span>
+        </button>
+        <button id="cancel-btn" class="btn btn-danger" aria-label="Cancel download">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Cancel</span>
+        </button>
+      </div>
+
+      <div class="config-item">
+        <label for="threads-select" class="config-label">Download Threads</label>
+        <select id="threads-select" class="select-threads">
+          <option value="1">1 Thread</option>
+          <option value="2">2 Threads</option>
+          <option value="3" selected>3 Threads</option>
+          <option value="5">5 Threads</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Segments Map -->
+    <div class="segments-map-section">
+      <div class="segments-map-header">
+        <span>Segment Progress Map</span>
+        <span id="segments-status-text" class="status-pulse">Pending initialization...</span>
+      </div>
+      <div id="segments-grid" class="segments-grid" aria-label="Visual representation of downloaded segments">
+        <!-- Dots injected here -->
+      </div>
+    </div>
+
+    <div id="status-banner" class="status-banner" aria-live="assertive"></div>
+
+    <div id="output-strategy" class="output-strategy-box">
+      <strong>Output Format strategy:</strong> <span id="strategy-explanation">Parsing format...</span>
+    </div>
+  </div>
+  <script type="module" src="index.ts"></script>
+</body>
+</html>
