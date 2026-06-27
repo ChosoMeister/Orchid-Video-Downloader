@@ -1,1 +1,0 @@
-import"./modulepreload-polyfill.js";chrome.runtime.onMessage.addListener((s,o,r)=>{const{type:c,data:t}=s;if(c==="CREATE_BLOB_URL"){try{const e=new Blob([t.buffer],{type:t.mimeType}),a=URL.createObjectURL(e);r({success:!0,blobUrl:a})}catch(e){r({success:!1,error:e.message})}return!0}return!1});
