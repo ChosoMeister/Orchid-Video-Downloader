@@ -40,11 +40,7 @@ jobs:
           path: orchid-downloader.zip
 
       - name: Pack extension into CRX
-        uses: cardinalby/webext-buildtools-pack-extension-dir-action@v1
-        with:
-          extensionDir: 'dist'
-          zipFilePath: 'orchid-downloader.zip'
-          crxFilePath: 'orchid-downloader.crx'
+        run: npx -y crx3 pack dist -o orchid-downloader.crx
 
       - name: Upload CRX Artifact
         uses: actions/upload-artifact@v4
