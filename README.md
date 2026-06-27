@@ -1,3 +1,5 @@
+[🇬🇧 English](README.md) | [🇮🇷 فارسی](README-fa.md)
+
 # Orchid Video Downloader Extension
 
 Orchid Video Downloader is a clean-room, secure Chrome Manifest V3 extension designed to detect, parse, and download browser-played media streams directly to the local machine. It intercepts HLS (`.m3u8`), DASH (`.mpd`), and progressive formats (`.mp4`, `.webm`) securely, prioritizing user privacy and legal compliance.
@@ -25,17 +27,22 @@ Orchid Video Downloader is a clean-room, secure Chrome Manifest V3 extension des
 
 ## Installation in Chrome
 
-1. Clone or copy the extension source code to your machine.
+### For Users
+1. Go to the [Releases page](https://github.com/ChosoMeister/Orchid-Video-Downloader/releases) and download the latest `orchid-downloader.zip`.
+2. Extract the `.zip` file into a folder on your computer.
+3. Open Google Chrome and navigate to `chrome://extensions/`.
+4. Enable **Developer mode** (toggle switch in the top right).
+5. Click **Load unpacked** (button in the top left).
+6. Select the extracted folder.
+
+### For Developers (Build from source)
+1. Clone the extension source code to your machine.
 2. Build the project using npm:
    ```bash
    npm install
    npm run build
    ```
-3. Open Google Chrome.
-4. Navigate to `chrome://extensions/`.
-5. Enable **Developer mode** (toggle switch in the top right).
-6. Click **Load unpacked** (button in the top left).
-7. Select the compiled `dist/` directory in the project folder.
+3. Follow steps 3-6 above, but select the `dist/` directory generated in the project folder.
 
 ## Project Structure
 
