@@ -5,7 +5,7 @@
   "main": "dist/background.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "node scripts/copy-ffmpeg.js && tsc && vite build",
     "test": "vitest run",
     "lint": "eslint src --ext .ts"
   },
@@ -16,5 +16,10 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
     "vitest": "^1.2.1"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2"
   }
 }

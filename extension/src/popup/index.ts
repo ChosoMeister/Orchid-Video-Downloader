@@ -1,5 +1,6 @@
 import { parseHlsPlaylist } from '../lib/hls/hlsParser';
 import { parseDashManifest } from '../lib/dash/dashParser';
+import { parseVimeoPlaylist } from '../lib/vimeo/vimeoParser';
 import { redactUrlParams, sanitizeFilename } from '../lib/security/security';
 
 interface DetectedMedia {
@@ -8,7 +9,7 @@ interface DetectedMedia {
   tabId: number;
   pageUrl: string;
   pageTitle: string;
-  format: 'hls' | 'dash' | 'direct';
+  format: 'hls' | 'dash' | 'direct' | 'vimeo';
   mimeType: string;
   size: number;
   headers: Record<string, string>;
@@ -203,6 +204,34 @@ async function createStreamCard(stream: DetectedMedia): Promise<HTMLDivElement> 
 
           variantsList.appendChild(vItem);
         });
+      }
+    } else if (stream.format === 'vimeo') {
+      const playlistText = await fetchManifestText(stream.url, stream.headers);
+      const parsed = parseVimeoPlaylist(playlistText, stream.url);
+
+      variantsList.innerHTML = '';
+      parsed.videoTracks.forEach((vt) => {
+        const res = vt.width && vt.height ? `${vt.width}x${vt.height}` : vt.id;
+        const bandwidth = vt.bitrate ? `${Math.round(vt.bitrate / 1000)} kbps` : '';
+        
+        const vItem = document.createElement('div');
+        vItem.className = 'variant-item';
+        vItem.innerHTML = `
+          <div class="variant-info">
+            <span class="variant-resolution">${res}</span>
+            <div class="variant-bandwidth">${bandwidth} - ${vt.codecs || 'unknown codec'}</div>
+          </div>
+          <button class="btn-download">Download</button>
+        `;
+
+        const dlBtn = vItem.querySelector('.btn-download') as HTMLButtonElement;
+        dlBtn.addEventListener('click', () => triggerDownload(stream, stream.url, res));
+
+        variantsList.appendChild(vItem);
+      });
+      
+      if (parsed.videoTracks.length === 0) {
+        variantsList.innerHTML = `<div style="font-size: 11px; color: var(--text-secondary);">No video qualities found.</div>`;
       }
     } else {
       // Direct file format (.mp4 etc)

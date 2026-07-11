@@ -6,7 +6,7 @@ interface DetectedMedia {
   tabId: number;
   pageUrl: string;
   pageTitle: string;
-  format: 'hls' | 'dash' | 'direct';
+  format: 'hls' | 'dash' | 'direct' | 'vimeo';
   mimeType: string;
   size: number;
   headers: Record<string, string>;
@@ -181,6 +181,14 @@ function detectFormat(urlStr: string, contentType: string): DetectedMedia['forma
     return 'direct';
   }
 
+  // Vimeo Custom JSON Detection
+  if (
+    (path.endsWith('/playlist.json') || urlStr.includes('vimeocdn.com/')) &&
+    contentType.includes('application/json')
+  ) {
+    return 'vimeo';
+  }
+
   return null;
 }
 
@@ -198,6 +206,11 @@ function isSegmentUrl(urlStr: string): boolean {
 
   // Segment query patterns (e.g. frag-1, segment_1, chunk_1)
   if (urlStr.includes('/fragments/') || urlStr.includes('/chunks/') || /seg[-_]\d+/i.test(urlStr)) {
+    return true;
+  }
+
+  // Vimeo segment patterns
+  if (urlStr.includes('/range/') || url.searchParams.has('range')) {
     return true;
   }
 
