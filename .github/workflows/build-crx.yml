@@ -1,4 +1,4 @@
-name: Build and Release CRX
+name: Build and Release Extension ZIP
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'npm'
 
       - name: Install Dependencies
@@ -35,20 +35,28 @@ jobs:
           cd dist
           zip -r ../orchid-downloader.zip .
 
+      - name: Validate extension ZIP
+        run: |
+          test -s orchid-downloader.zip
+          unzip -t orchid-downloader.zip
+          unzip -Z1 orchid-downloader.zip | grep -Fxq manifest.json
+
       - name: Upload ZIP Artifact
         uses: actions/upload-artifact@v4
         with:
           name: orchid-downloader-zip
           path: orchid-downloader.zip
+          if-no-files-found: error
 
       - name: Delete old release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: gh release delete latest --cleanup-tag -y || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release to GitHub
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           tag_name: latest
           name: Latest Build
