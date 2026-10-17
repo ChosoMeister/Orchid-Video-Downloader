@@ -284,25 +284,32 @@ async function fetchManifestText(url: string, headers: Record<string, string>): 
  * Launches the downloader by saving details in storage and opening downloader page.
  */
 async function triggerDownload(stream: DetectedMedia, targetUrl: string, resolution: string) {
-  const downloadTaskId = `task_${Date.now()}`;
+  const downloadTaskId = `task_${crypto.randomUUID()}`;
   
   // Save full task configuration to local storage
-  await chrome.storage.local.set({
-    [downloadTaskId]: {
-      id: downloadTaskId,
-      manifestUrl: targetUrl,
-      originalUrl: stream.url,
-      pageUrl: stream.pageUrl,
-      pageTitle: stream.pageTitle,
-      format: stream.format,
-      resolution,
-      headers: stream.headers
-    }
-  });
+  try {
+    await chrome.storage.local.set({
+      [downloadTaskId]: {
+        id: downloadTaskId,
+        manifestUrl: targetUrl,
+        originalUrl: stream.url,
+        pageUrl: stream.pageUrl,
+        pageTitle: stream.pageTitle,
+        format: stream.format,
+        resolution,
+        headers: stream.headers
+      }
+    });
 
-  // Open downloader page
-  const downloaderPageUrl = chrome.runtime.getURL(`extension/src/downloader/index.html?taskId=${downloadTaskId}`);
-  chrome.tabs.create({ url: downloaderPageUrl });
+    // Open the downloader only after Chrome confirms the task has been saved.
+    await chrome.tabs.create({
+      url: chrome.runtime.getURL(`extension/src/downloader/index.html?taskId=${encodeURIComponent(downloadTaskId)}`)
+    });
+  } catch (error) {
+    await chrome.storage.local.remove(downloadTaskId).catch(() => undefined);
+    console.error('Failed to create download task:', error);
+    window.alert('Orchid could not open the download page. Reload the extension and try again.');
+  }
 }
 
 /**
