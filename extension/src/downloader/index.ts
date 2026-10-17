@@ -231,7 +231,9 @@ async function handleProgress(p: DownloadProgress) {
   if (!task) return;
 
   // Chunks and Percentage metrics
-  chunksMetric.innerText = `${p.downloadedSegments} / ${p.totalSegments}`;
+  chunksMetric.innerText = engine?.isDirectStream()
+    ? `${p.percentage}%`
+    : `${p.downloadedSegments} / ${p.totalSegments}`;
   progressFill.style.width = `${p.percentage}%`;
   progressPercentage.innerText = `${p.percentage}%`;
 
@@ -287,7 +289,9 @@ async function handleProgress(p: DownloadProgress) {
     }
   }
 
-  segmentsStatusText.innerText = `${p.downloadedSegments} of ${p.totalSegments} segments completed`;
+  segmentsStatusText.innerText = engine?.isDirectStream()
+    ? `${(p.downloadedBytes / (1024 * 1024)).toFixed(2)} MB of ${engine.getDirectTotalBytes() > 0 ? `${(engine.getDirectTotalBytes() / (1024 * 1024)).toFixed(2)} MB` : 'unknown size'} downloaded`
+    : `${p.downloadedSegments} of ${p.totalSegments} segments completed`;
 
   // UI state for pause/resume button
   if (p.status === 'downloading') {
@@ -312,6 +316,11 @@ async function handleProgress(p: DownloadProgress) {
   if (p.status === 'failed') {
     showError(p.error || 'Download failed.');
   } else if (p.status === 'completed') {
+    if (task.format === 'direct') {
+      showSuccess('Download completed successfully.');
+      segmentsStatusText.innerText = 'Completed. File saved.';
+      return;
+    }
     if (task.format === 'vimeo' && vimeoPhase === 'video') {
       vimeoPhase = 'audio';
       segmentUrls = vimeoAudioSegments;
@@ -328,6 +337,7 @@ async function handleProgress(p: DownloadProgress) {
     }
   }
 }
+
 
 /**
  * Handle Pause/Resume toggle button.

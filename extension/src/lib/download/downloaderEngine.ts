@@ -27,7 +27,6 @@ export class DownloaderEngine {
   private error?: string;
 
   private abortController: AbortController | null = null;
-  private pausedIndices: Set<number> = new Set();
   private failedIndices: Set<number> = new Set();
   
   // Speed calculation
@@ -35,6 +34,7 @@ export class DownloaderEngine {
   private lastSpeedCheckTime = 0;
   private lastSpeedCheckBytes = 0;
   private currentSpeed = 0;
+  private readonly directStream: boolean;
 
   constructor(
     downloadId: string,
@@ -48,6 +48,7 @@ export class DownloaderEngine {
     this.headers = headers;
     this.concurrency = concurrency;
     this.progressCallback = onProgress;
+    this.directStream = urls.length === 1 && /\.mp4(?:$|[?#])/i.test(urls[0]);
   }
 
   public setConcurrency(concurrency: number) {
@@ -60,6 +61,11 @@ export class DownloaderEngine {
 
   public async start(): Promise<void> {
     if (this.status === 'downloading') return;
+
+    if (this.directStream) {
+      await this.startDirectStream();
+      return;
+    }
     
     this.status = 'downloading';
     this.abortController = new AbortController();
@@ -71,9 +77,109 @@ export class DownloaderEngine {
     this.pump();
   }
 
+  /** Stream large progressive files directly into Chrome's download manager. */
+  private async startDirectStream(): Promise<void> {
+    this.status = 'downloading';
+    this.startTime = Date.now();
+    this.lastSpeedCheckTime = this.startTime;
+    this.lastSpeedCheckBytes = 0;
+    this.triggerProgress();
+    this.directDownloadId = await new Promise<number | null>(resolve => {
+      chrome.downloads.download({
+        url: this.urls[0],
+        method: 'GET',
+        headers: Object.entries(this.headers).map(([name, value]) => ({ name, value }))
+      }, id => {
+        if (chrome.runtime.lastError || id === undefined) {
+          this.status = 'failed';
+          this.error = chrome.runtime.lastError?.message || 'Chrome could not start this download.';
+          this.triggerProgress();
+          resolve(null);
+          return;
+        }
+        resolve(id);
+      });
+    });
+    if (this.directDownloadId === null) return;
+
+    this.directDownloadActive = true;
+    chrome.downloads.onChanged.addListener(this.handleDirectDownloadChanged);
+    if (this.directDownloadActive) this.pollDirectDownload(this.directDownloadId);
+  }
+
+  private directTotalBytes = 0;
+  private directDownloadId: number | null = null;
+  private directDownloadActive = false;
+
+  private readonly handleDirectDownloadChanged = (delta: chrome.downloads.DownloadDelta) => {
+    if (!this.directDownloadActive || delta.id !== this.directDownloadId) return;
+    if (delta.state?.current === 'complete') {
+      this.directDownloadActive = false;
+      chrome.downloads.onChanged.removeListener(this.handleDirectDownloadChanged);
+      this.completedCount = 1;
+      this.status = 'completed';
+      this.currentSpeed = 0;
+      this.triggerProgress();
+    } else if (delta.state?.current === 'interrupted') {
+      this.directDownloadActive = false;
+      chrome.downloads.onChanged.removeListener(this.handleDirectDownloadChanged);
+      this.status = 'failed';
+      this.error = 'Chrome interrupted the file download.';
+      this.triggerProgress();
+    } else if (delta.paused?.current === false) {
+      this.status = 'downloading';
+      this.triggerProgress();
+    } else if (delta.paused?.current === true) {
+      this.status = 'paused';
+      this.triggerProgress();
+    }
+    this.pollDirectDownload(this.directDownloadId);
+  };
+
+  private pollDirectDownload(downloadId: number): void {
+    if (!this.directDownloadActive) return;
+    chrome.downloads.search({ id: downloadId }, items => {
+      if (chrome.runtime.lastError || !items[0] || !this.directDownloadActive) return;
+      const item = items[0];
+      this.downloadedBytes = Math.max(0, item.bytesReceived);
+      this.directTotalBytes = Math.max(0, item.totalBytes);
+      const percentage = this.directTotalBytes > 0
+        ? Math.min(99, Math.floor((this.downloadedBytes / this.directTotalBytes) * 100))
+        : 0;
+      const now = Date.now();
+      const elapsed = now - this.lastSpeedCheckTime;
+      if (elapsed >= 1000) {
+        this.currentSpeed = ((this.downloadedBytes - this.lastSpeedCheckBytes) / elapsed) * 1000;
+        this.lastSpeedCheckTime = now;
+        this.lastSpeedCheckBytes = this.downloadedBytes;
+      }
+      this.progressCallback({
+        percentage,
+        downloadedSegments: 0,
+        totalSegments: 1,
+        downloadedBytes: this.downloadedBytes,
+        speed: this.currentSpeed,
+        status: this.status
+      });
+      setTimeout(() => this.pollDirectDownload(downloadId), 1000);
+    });
+  }
+
+  public getDirectTotalBytes(): number {
+    return this.directTotalBytes;
+  }
+
+  public isDirectStream(): boolean {
+    return this.directStream;
+  }
+
   public pause(): void {
     if (this.status !== 'downloading') return;
     this.status = 'paused';
+    if (this.directStream && this.directDownloadActive && this.directDownloadId !== null) {
+      chrome.downloads.pause(this.directDownloadId);
+      return;
+    }
     if (this.abortController) {
       this.abortController.abort();
     }
@@ -82,6 +188,10 @@ export class DownloaderEngine {
 
   public resume(): void {
     if (this.status !== 'paused') return;
+    if (this.directStream && this.directDownloadActive && this.directDownloadId !== null) {
+      chrome.downloads.resume(this.directDownloadId);
+      return;
+    }
     this.status = 'downloading';
     this.abortController = new AbortController();
     this.startTime = Date.now();
@@ -102,7 +212,11 @@ export class DownloaderEngine {
     this.completedCount = 0;
     this.downloadedBytes = 0;
     this.currentSpeed = 0;
-    this.pausedIndices.clear();
+    if (this.directDownloadActive && this.directDownloadId !== null) {
+      chrome.downloads.cancel(this.directDownloadId);
+      this.directDownloadActive = false;
+      chrome.downloads.onChanged.removeListener(this.handleDirectDownloadChanged);
+    }
     this.failedIndices.clear();
     this.triggerProgress();
   }
