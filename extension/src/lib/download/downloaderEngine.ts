@@ -87,13 +87,7 @@ export class DownloaderEngine {
     this.directDownloadId = await new Promise<number | null>(resolve => {
       chrome.downloads.download({
         url: this.urls[0],
-        method: 'GET',
-        // chrome.downloads rejects browser-controlled headers such as Origin
-        // and User-Agent. The source request in the HAR only needs Referer;
-        // Chrome supplies its own User-Agent for this download.
-        headers: Object.entries(this.headers)
-          .filter(([name, value]) => name.toLowerCase() === 'referer' && Boolean(value))
-          .map(([, value]) => ({ name: 'Referer', value }))
+        method: 'GET'
       }, id => {
         if (chrome.runtime.lastError || id === undefined) {
           this.status = 'failed';
