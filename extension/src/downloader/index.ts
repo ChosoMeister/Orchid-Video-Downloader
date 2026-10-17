@@ -59,22 +59,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Get task configuration
-  const result = await chrome.storage.local.get(taskId);
-  task = result[taskId] as DownloadTask;
+  // A short retry makes the handoff resilient to a newly opened extension
+  // page observing storage just before Chrome exposes the write.
+  for (let attempt = 0; attempt < 4 && !task; attempt++) {
+    const result = await chrome.storage.local.get(taskId);
+    task = result[taskId] as DownloadTask | undefined || null;
+    if (!task && attempt < 3) await new Promise(resolve => setTimeout(resolve, 150));
+  }
 
   if (!task) {
     showError('Download task not found or expired.');
     return;
   }
 
-  // Remove task from storage to clean up
-  await chrome.storage.local.remove(taskId);
-
   // Setup UI details
   initUI();
   
   // Initialize manifest fetch & parser
   await initializeStream();
+  await chrome.storage.local.remove(taskId);
 });
 
 function initUI() {
