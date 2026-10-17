@@ -88,7 +88,12 @@ export class DownloaderEngine {
       chrome.downloads.download({
         url: this.urls[0],
         method: 'GET',
-        headers: Object.entries(this.headers).map(([name, value]) => ({ name, value }))
+        // chrome.downloads rejects browser-controlled headers such as Origin
+        // and User-Agent. The source request in the HAR only needs Referer;
+        // Chrome supplies its own User-Agent for this download.
+        headers: Object.entries(this.headers)
+          .filter(([name, value]) => name.toLowerCase() === 'referer' && Boolean(value))
+          .map(([, value]) => ({ name: 'Referer', value }))
       }, id => {
         if (chrome.runtime.lastError || id === undefined) {
           this.status = 'failed';
